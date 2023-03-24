@@ -89,8 +89,6 @@ using OpenAI's GPT-3 model.`,
 			fmt.Printf("Error creating pull request: %v\n", err)
 			os.Exit(1)
 		}
-
-		fmt.Println("Pull request created successfully.")
 	},
 }
 
