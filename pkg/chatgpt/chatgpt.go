@@ -2,8 +2,10 @@ package chatgpt
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
+	"strings"
 	"sync"
 
 	"github.com/sashabaranov/go-openai"
@@ -81,7 +83,7 @@ func (c *ChatGPTClient) GeneratePRDetailsGPT3(gitDiff string) (branchName, prTit
 	go func() {
 		defer wg.Done()
 		prompt := c.generateBranchNamePrompt(gitDiff)
-		branchName, err = c.generateResponseWithPrompt(prompt)
+		branchName, err = c.generateResponseWithPrompt(prompt, openai.GPT3Dot5Turbo)
 		if err != nil {
 			log.Printf("Error generating branch name: %v\n", err)
 		}
@@ -91,7 +93,7 @@ func (c *ChatGPTClient) GeneratePRDetailsGPT3(gitDiff string) (branchName, prTit
 	go func() {
 		defer wg.Done()
 		prompt := c.generatePrTitlePrompt(gitDiff)
-		prTitle, err = c.generateResponseWithPrompt(prompt)
+		prTitle, err = c.generateResponseWithPrompt(prompt, openai.GPT3Dot5Turbo)
 		if err != nil {
 			log.Printf("Error generating PR title: %v\n", err)
 		}
@@ -102,7 +104,7 @@ func (c *ChatGPTClient) GeneratePRDetailsGPT3(gitDiff string) (branchName, prTit
 	go func() {
 		defer wg.Done()
 		prompt := c.generatePrDescriptionPrompt(gitDiff)
-		prDescription, err = c.generateResponseWithPrompt(prompt)
+		prDescription, err = c.generateResponseWithPrompt(prompt, openai.GPT3Dot5Turbo)
 		if err != nil {
 			log.Printf("Error generating PR description: %v\n", err)
 		}
@@ -117,11 +119,36 @@ func (c *ChatGPTClient) GeneratePRDetailsGPT3(gitDiff string) (branchName, prTit
 	return branchName, prTitle, prDescription, nil
 }
 
-func (c *ChatGPTClient) generateResponseWithPrompt(prompt string) (string, error) {
+func (c *ChatGPTClient) GeneratePRDetailsGPT4(gitDiff string) (branchName, prTitle, prDescription string, err error) {
+	prompt := c.generateGPT4Prompt(gitDiff)
+	response, err := c.generateResponseWithPrompt(prompt, openai.GPT4)
+
+	if err != nil {
+		return "", "", "", err
+	}
+
+	// Parse the response to extract the PR title, branch name, and PR description
+	// This code assumes the response is strictly formatted as described in the generateGPT4Prompt function
+	lines := strings.Split(response, "\n")
+	if len(lines) >= 4 {
+		prTitle = strings.TrimSpace(strings.TrimPrefix(lines[0], "PR Title (Conventional Commit):"))
+		branchName = strings.TrimSpace(strings.TrimPrefix(lines[1], "Branch Name:"))
+		prDescription = strings.TrimSpace(lines[3])
+		for _, line := range lines[4:] {
+			prDescription += "\n" + strings.TrimSpace(line)
+		}
+	} else {
+		return "", "", "", errors.New("unable to parse GPT-4 response")
+	}
+
+	return branchName, prTitle, prDescription, nil
+}
+
+func (c *ChatGPTClient) generateResponseWithPrompt(prompt string, model string) (string, error) {
 	resp, err := c.client.CreateChatCompletion(
 		context.Background(),
 		openai.ChatCompletionRequest{
-			Model: openai.GPT3Dot5Turbo,
+			Model: model,
 			Messages: []openai.ChatCompletionMessage{
 				{
 					Role:    openai.ChatMessageRoleAssistant,
