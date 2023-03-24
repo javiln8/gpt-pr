@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/spf13/cobra"
-	"log"
 	"os"
 	"regexp"
 
@@ -102,8 +101,6 @@ func init() {
 }
 
 func extractBranchName(response string) (string, error) {
-	log.Print(response)
-
 	// This regular expression matches branch names that follow the format <type>/<short-description>
 	branchNamePattern := regexp.MustCompile(`\b[\w-]+\/[\w-]+`)
 
