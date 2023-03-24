@@ -72,8 +72,13 @@ func (c *ChatGPTClient) generatePrDescriptionPrompt(gitDiff string) string {
 
 %s
 
-Ensure the PR description includes a clear and concise summary of the changes made, formatted as a bullet-point list in Markdown. Focus on the analysis of the git diff and avoid any personal language in the response.
-`, gitDiff)
+Ensure the PR description includes the following sections with the best-practice PR summary format:
+
+1. **Description**: A brief explanation of the changes made.
+2. **Changes**: A clear and concise summary of the changes made, formatted as a bullet-point list in Markdown.
+3. **Testing**: A description of how the changes were tested, or instructions on how to test the changes.
+
+Focus on the analysis of the git diff and avoid any personal language, including requests for reviews, in the response.`, gitDiff)
 }
 
 func (c *ChatGPTClient) GeneratePRDetailsGPT3(gitDiff string) (branchName, prTitle, prDescription string, err error) {
