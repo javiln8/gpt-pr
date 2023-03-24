@@ -48,17 +48,12 @@ To use GPT-PR, you can run the following commands:
 
 ```bash
 Usage:
-  gpt-pr [command]
-
-Available Commands:
-  completion  Generate the autocompletion script for the specified shell
-  generate    Generate a PR title, branch name, and PR description based on a git diff
-  help        Help about any command
+  gpt-pr generate [flags]
 
 Flags:
-  -h, --help   help for gpt-pr
-
-Use "gpt-pr [command] --help" for more information about a command.
+  -g, --gpt-version int   Choose the GPT version (3 or 4), default is 3 (default 3)
+  -h, --help              help for generate
+  -v, --verbose           Show the ChatGPT response
 ```
 
 ## GPT-3 Limitations
