@@ -13,6 +13,7 @@ import (
 )
 
 var verbose bool
+var gptVersion int
 
 var generateCmd = &cobra.Command{
 	Use:   "generate",
@@ -49,11 +50,12 @@ using OpenAI's GPT-3 model.`,
 			os.Exit(1)
 		}
 
+		var generatedBranchName, prTitle, prDescription string
 		client := chatgpt.NewChatGPTClient(apiKey)
-		generatedBranchName, prTitle, prDescription, err := client.GeneratePRDetailsGPT3(gitDiff)
-		if err != nil {
-			fmt.Printf("Error generating response: %v\n", err)
-			os.Exit(1)
+		if gptVersion == 4 {
+			generatedBranchName, prTitle, prDescription, err = client.GeneratePRDetailsGPT4(gitDiff)
+		} else {
+			generatedBranchName, prTitle, prDescription, err = client.GeneratePRDetailsGPT3(gitDiff)
 		}
 
 		branchName, err := extractBranchName(generatedBranchName)
@@ -95,6 +97,7 @@ using OpenAI's GPT-3 model.`,
 func init() {
 	rootCmd.AddCommand(generateCmd)
 	generateCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Show the ChatGPT response")
+	generateCmd.Flags().IntVarP(&gptVersion, "gpt-version", "g", 3, "Choose the GPT version (3 or 4), default is 3")
 }
 
 func extractBranchName(response string) (string, error) {
