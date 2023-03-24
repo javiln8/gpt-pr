@@ -70,7 +70,7 @@ using OpenAI's GPT-3 model.`,
 			fmt.Printf("PR Description:\n%s\n", prDescription)
 		}
 
-		if err := pushBranch(branchName); err != nil {
+		if _, err := git.CreateBranch(branchName); err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
@@ -78,6 +78,11 @@ using OpenAI's GPT-3 model.`,
 		_, err = git.CommitChanges(prTitle)
 		if err != nil {
 			fmt.Printf("Error committing changes: %v\n", err)
+			os.Exit(1)
+		}
+
+		if _, err := git.PushBranch(branchName); err != nil {
+			fmt.Println(err)
 			os.Exit(1)
 		}
 
@@ -113,16 +118,4 @@ func extractBranchName(response string) (string, error) {
 	}
 
 	return "", errors.New("no branch name found in response")
-}
-
-func pushBranch(branchName string) error {
-	if _, err := git.CreateBranch(branchName); err != nil {
-		return fmt.Errorf("error creating branch: %v", err)
-	}
-
-	if _, err := git.PushBranch(branchName); err != nil {
-		return fmt.Errorf("error pushing branch: %v", err)
-	}
-
-	return nil
 }
