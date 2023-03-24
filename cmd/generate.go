@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/spf13/cobra"
-	"log"
 	"os"
 	"regexp"
 
@@ -86,12 +85,6 @@ using OpenAI's GPT-3 model.`,
 			os.Exit(1)
 		}
 
-		err = github.CreatePullRequest(owner, repo, branchName, baseBranch, prTitle, prDescription)
-		if err != nil {
-			fmt.Printf("Error creating pull request: %v\n", err)
-			os.Exit(1)
-		}
-
 		fmt.Println("Pull request created successfully.")
 	},
 }
@@ -102,8 +95,6 @@ func init() {
 }
 
 func extractBranchName(response string) (string, error) {
-	log.Print(response)
-
 	// This regular expression matches branch names that follow the format <type>/<short-description>
 	branchNamePattern := regexp.MustCompile(`\b[\w-]+\/[\w-]+`)
 
