@@ -85,6 +85,7 @@ func (c *ChatGPTClient) GeneratePRDetailsGPT3(gitDiff string) (branchName, prTit
 		if err != nil {
 			log.Printf("Error generating branch name: %v\n", err)
 		}
+		log.Printf("Successfully generated branch name.")
 	}()
 
 	go func() {
@@ -94,6 +95,8 @@ func (c *ChatGPTClient) GeneratePRDetailsGPT3(gitDiff string) (branchName, prTit
 		if err != nil {
 			log.Printf("Error generating PR title: %v\n", err)
 		}
+		log.Printf("Successfully generated PR title.")
+
 	}()
 
 	go func() {
@@ -103,6 +106,7 @@ func (c *ChatGPTClient) GeneratePRDetailsGPT3(gitDiff string) (branchName, prTit
 		if err != nil {
 			log.Printf("Error generating PR description: %v\n", err)
 		}
+		log.Printf("Successfully generated PR description.")
 	}()
 
 	wg.Wait()
@@ -132,7 +136,5 @@ func (c *ChatGPTClient) generateResponseWithPrompt(prompt string) (string, error
 		return "", err
 	}
 
-	log.Println("Response generated successfully.")
-	//log.Println("Generated response:", resp.Choices[0].Message.Content)
 	return resp.Choices[0].Message.Content, nil
 }
