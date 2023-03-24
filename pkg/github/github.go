@@ -64,5 +64,18 @@ func CreatePullRequest(owner, repo, branch, baseBranch, title, body string) erro
 		return fmt.Errorf("failed to create PR, status code: %d, response: %s", resp.StatusCode, string(body))
 	}
 
+	var prResp map[string]interface{}
+	err = json.NewDecoder(resp.Body).Decode(&prResp)
+	if err != nil {
+		return fmt.Errorf("failed to decode response: %v", err)
+	}
+
+	prURL, ok := prResp["html_url"].(string)
+	if !ok {
+		return fmt.Errorf("could not find PR URL in response: %v", prResp)
+	}
+
+	log.Printf("Created pull request: %s", prURL)
+
 	return nil
 }
