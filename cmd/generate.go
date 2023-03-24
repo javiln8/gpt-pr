@@ -85,12 +85,6 @@ using OpenAI's GPT-3 model.`,
 			os.Exit(1)
 		}
 
-		err = github.CreatePullRequest(owner, repo, branchName, baseBranch, prTitle, prDescription)
-		if err != nil {
-			fmt.Printf("Error creating pull request: %v\n", err)
-			os.Exit(1)
-		}
-
 		fmt.Println("Pull request created successfully.")
 	},
 }
