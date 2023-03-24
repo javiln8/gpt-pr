@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/spf13/cobra"
+	"log"
 	"os"
 	"regexp"
 
@@ -57,6 +58,7 @@ using OpenAI's GPT-3 model.`,
 		}
 
 		branchName, err := extractBranchName(generatedBranchName)
+		log.Print("hola")
 		if err != nil {
 			fmt.Printf("Error extracting branch name from response: %v\n", err)
 			os.Exit(1)
