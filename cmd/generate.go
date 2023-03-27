@@ -12,8 +12,13 @@ import (
 	"gpt-pr/pkg/github"
 )
 
-var verbose bool
-var gptVersion int
+type generateFlags struct {
+	verbose        bool
+	gptVersion     int
+	addAttribution bool
+}
+
+var flags generateFlags
 
 var generateCmd = &cobra.Command{
 	Use:   "generate",
@@ -52,10 +57,15 @@ using OpenAI's GPT-3 model.`,
 
 		var generatedBranchName, prTitle, prDescription string
 		client := chatgpt.NewChatGPTClient(apiKey)
-		if gptVersion == 4 {
+		if flags.gptVersion == 4 {
 			generatedBranchName, prTitle, prDescription, err = client.GeneratePRDetailsGPT4(gitDiff)
 		} else {
 			generatedBranchName, prTitle, prDescription, err = client.GeneratePRDetailsGPT3(gitDiff)
+		}
+
+		// Add the attribution message if the flag is set
+		if flags.addAttribution {
+			prDescription += "\n\n---\n*This PR has been created with [gpt-pr](https://github.com/javiln8/gpt-pr).*"
 		}
 
 		branchName, err := extractBranchName(generatedBranchName)
@@ -64,7 +74,7 @@ using OpenAI's GPT-3 model.`,
 			os.Exit(1)
 		}
 
-		if verbose {
+		if flags.verbose {
 			fmt.Println("Generated values:")
 			fmt.Printf("Branch Name: %s\n", branchName)
 			fmt.Printf("PR Title: %s\n", prTitle)
@@ -96,10 +106,10 @@ using OpenAI's GPT-3 model.`,
 
 func init() {
 	rootCmd.AddCommand(generateCmd)
-	generateCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Show the ChatGPT response")
-	generateCmd.Flags().IntVarP(&gptVersion, "gpt-version", "g", 3, "Choose the GPT version (3 or 4), default is 3")
+	generateCmd.Flags().BoolVarP(&flags.verbose, "verbose", "v", false, "Show the ChatGPT response")
+	generateCmd.Flags().IntVarP(&flags.gptVersion, "gpt-version", "g", 3, "Choose the GPT version (3 or 4), default is 3")
+	generateCmd.Flags().BoolVarP(&flags.addAttribution, "add-attribution", "a", false, "Add an attribution message at the end of the PR summary")
 }
-
 func extractBranchName(response string) (string, error) {
 	// This regular expression matches branch names that follow the format <type>/<short-description>
 	branchNamePattern := regexp.MustCompile(`\b[\w-]+\/[\w-]+`)
