@@ -51,6 +51,7 @@ Usage:
   gpt-pr generate [flags]
 
 Flags:
+  -a, --add-attribution   Add an attribution message at the end of the PR summary
   -g, --gpt-version int   Choose the GPT version (3 or 4), default is 3 (default 3)
   -h, --help              help for generate
   -v, --verbose           Show the ChatGPT response
