@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 	"sync"
 
@@ -57,14 +58,15 @@ Your response should be a single line containing only the branch name. Do not in
 IMPORTANT: Please begin your response with "Branch Name: " followed by the actual branch name.`, gitDiff)
 }
 
-func (c *ChatGPTClient) generatePrTitlePrompt(gitDiff string) string {
-	return fmt.Sprintf(`Analyze the following git diff output from a code project and generate a PR title following the Conventional Commit format, based on the changes made:
+func (c *ChatGPTClient) generatePrTitlePrompt(gitDiff string, commitType string) string {
+	return fmt.Sprintf(`Analyze the following git diff output from a code project and generate a PR title based on the changes made:
 
 %s
 
+Use the commit type "%s" for the PR title.
 Ensure the PR title strictly follows the Conventional Commit format: <type>: <short-description>
 For example: feat: add login functionality
-`, gitDiff)
+`, gitDiff, commitType)
 }
 
 func (c *ChatGPTClient) generatePrDescriptionPrompt(gitDiff string) string {
@@ -78,7 +80,7 @@ Ensure the PR description includes a clear and concise summary of the changes ma
 
 func (c *ChatGPTClient) GeneratePRDetailsGPT3(gitDiff string) (branchName, prTitle, prDescription string, err error) {
 	var wg sync.WaitGroup
-	wg.Add(3)
+	wg.Add(2)
 
 	go func() {
 		defer wg.Done()
@@ -92,17 +94,6 @@ func (c *ChatGPTClient) GeneratePRDetailsGPT3(gitDiff string) (branchName, prTit
 
 	go func() {
 		defer wg.Done()
-		prompt := c.generatePrTitlePrompt(gitDiff)
-		prTitle, err = c.generateResponseWithPrompt(prompt, openai.GPT3Dot5Turbo)
-		if err != nil {
-			log.Printf("Error generating PR title: %v\n", err)
-		}
-		log.Printf("Successfully generated PR title.")
-
-	}()
-
-	go func() {
-		defer wg.Done()
 		prompt := c.generatePrDescriptionPrompt(gitDiff)
 		prDescription, err = c.generateResponseWithPrompt(prompt, openai.GPT3Dot5Turbo)
 		if err != nil {
@@ -112,6 +103,17 @@ func (c *ChatGPTClient) GeneratePRDetailsGPT3(gitDiff string) (branchName, prTit
 	}()
 
 	wg.Wait()
+
+	commitType, err := extractCommitTypeFromBranchName(branchName)
+	if err != nil {
+		return "", "", "", err
+	}
+	prompt := c.generatePrTitlePrompt(gitDiff, commitType)
+	prTitle, err = c.generateResponseWithPrompt(prompt, openai.GPT3Dot5Turbo)
+	if err != nil {
+		log.Printf("Error generating PR title: %v\n", err)
+	}
+	log.Printf("Successfully generated PR title.")
 
 	if err != nil {
 		return "", "", "", err
@@ -164,4 +166,15 @@ func (c *ChatGPTClient) generateResponseWithPrompt(prompt string, model string) 
 	}
 
 	return resp.Choices[0].Message.Content, nil
+}
+
+func extractCommitTypeFromBranchName(branchName string) (string, error) {
+	commitTypePattern := regexp.MustCompile(`^[\w-]+`)
+
+	commitType := commitTypePattern.FindString(branchName)
+	if commitType != "" {
+		return commitType, nil
+	}
+
+	return "", errors.New("no commit type found in branch name")
 }
